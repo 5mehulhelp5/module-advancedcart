@@ -64,7 +64,7 @@ require(['jquery', 'mage/translate', 'jquery/jquery.cookie'], function ($, $t) {
             return true;
         }
 
-        // Target 2: .action.checkout.primary button — go up to its li or actions wrapper
+        // Target 2: .action.checkout.primary button - go up to its li or actions wrapper
         $target = $('.opc-block-summary .action.checkout').closest('li, .actions-toolbar');
         if ($target.length) {
             $target.before(buildEl());
