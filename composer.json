@@ -2,7 +2,7 @@
     "name": "mage2kishan/module-advancedcart",
     "description": "Advanced Cart Page Enhancements - Free shipping bar, qty buttons, trust badges, order notes, savings display, estimated delivery",
     "type": "magento2-module",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "license": "proprietary",
     "require": {
         "php": ">=8.1",

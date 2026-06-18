@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.5 - 2026-06-18
+
+### Changed
+- Rewrote README to match current template structure with Quick Answer, Who Is It For, full Configuration table, How It Works, and Quick Links sections
+- Removed undocumented gift options claims; documented only features present in system.xml
+- Set canonical and product page links to kishansavaliya.com/magento-2-advancedcart.html
+
 ## 1.0.0 - 2025-04-13
 
 ### Added
