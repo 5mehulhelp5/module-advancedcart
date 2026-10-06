@@ -1,0 +1,123 @@
+<?php
+/** @var \Panth\AdvancedCart\Block\Checkout\OrderNote $block */
+if (!$block->isEnabled()) {
+    return;
+}
+?>
+<script>
+require(['jquery', 'mage/translate', 'jquery/jquery.cookie'], function ($, $t) {
+    'use strict';
+
+    var maxLen      = <?= (int) $block->getMaxLength() ?>;
+    var label       = $t('<?= $block->escapeJs($block->getLabel()) ?>');
+    var placeholder = $t('<?= $block->escapeJs($block->getPlaceholder()) ?>');
+    var saveUrl     = '<?= $block->escapeJs($block->getSaveUrl()) ?>';
+    var currentNote = '<?= $block->escapeJs($block->getCurrentNote()) ?>';
+    var isPanth     = $('body').hasClass('panth-checkout-extended');
+
+    function buildEl() {
+        var $wrap = $('<div>', { id: 'panth-order-note-wrap', 'class': 'panth-order-note-wrap' });
+        var $lbl  = $('<label>', { 'class': 'panth-order-note-label', 'for': 'panth-order-note' }).text(label);
+        var $ta   = $('<textarea>', {
+            id: 'panth-order-note',
+            'class': 'panth-order-note-textarea',
+            maxlength: maxLen,
+            rows: 3
+        }).attr('placeholder', placeholder).val(currentNote);
+        var $hint = $('<span>', { 'class': 'panth-order-note-saving', id: 'panth-note-saving', role: 'status', 'aria-live': 'polite' });
+        $hint.css({ display: 'block', minHeight: '18px', margin: '5px 0 0', fontSize: '12px', lineHeight: '1.5', color: '#525252' });
+        $wrap.append($lbl, $ta, $hint);
+
+        if (!isPanth) {
+            $wrap.css({ margin: '12px 0 0', padding: '12px 0 0', borderTop: '1px solid #eee' });
+            $lbl.css({ display: 'block', fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '6px' });
+            $ta.css({ width: '100%', padding: '8px 10px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '16px', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' });
+        }
+
+        var saveTimer;
+        var clearTimer;
+        var request = 0;
+
+        function setStatus(text, state) {
+            clearTimeout(clearTimer);
+            $hint.text(text).attr('data-state', state || '');
+            $hint.css('color', state === 'error' ? '#B91C1C' : (state === 'saved' ? '#15803D' : '#525252'));
+            if (state === 'saved') {
+                clearTimer = setTimeout(function () {
+                    $hint.text('').attr('data-state', '');
+                }, 2000);
+            }
+        }
+
+        $ta.on('input', function () {
+            clearTimeout(saveTimer);
+            setStatus('', '');
+            var note = $ta.val();
+            currentNote = note;
+            saveTimer = setTimeout(function () {
+                var id = ++request;
+                setStatus($t('Saving...'), 'saving');
+                $.ajax({
+                    url: saveUrl,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: { note: note, form_key: $.cookie('form_key') }
+                }).done(function (res) {
+                    if (id !== request) { return; }
+                    if (res && res.success) {
+                        setStatus($t('Saved'), 'saved');
+                    } else {
+                        setStatus($t('Could not save note'), 'error');
+                    }
+                }).fail(function () {
+                    if (id !== request) { return; }
+                    setStatus($t('Could not save note'), 'error');
+                });
+            }, 800);
+        });
+
+        return $wrap;
+    }
+
+    function inject() {
+        if ($('#panth-order-note-wrap').length) return true;
+
+        var $target = $('.checkout-methods-items');
+        if ($target.length) {
+            $target.before(buildEl());
+            return true;
+        }
+
+        $target = $('.opc-block-summary .action.checkout').closest('li, .actions-toolbar');
+        if ($target.length) {
+            $target.before(buildEl());
+            return true;
+        }
+
+        $target = $('.opc-block-summary .payment-option').last();
+        if ($target.length) {
+            $target.after(buildEl());
+            return true;
+        }
+
+        $target = $('.opc-block-summary .table-totals');
+        if ($target.length) {
+            $target.after(buildEl());
+            return true;
+        }
+
+        return false;
+    }
+
+    var pending = false;
+    inject();
+    new MutationObserver(function () {
+        if (pending) { return; }
+        pending = true;
+        setTimeout(function () {
+            pending = false;
+            inject();
+        }, 150);
+    }).observe(document.body, { childList: true, subtree: true });
+});
+</script>
